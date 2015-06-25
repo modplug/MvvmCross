@@ -45,16 +45,17 @@ namespace ImageTesterIOS
 
         public override void ViewDidLoad()
         {
+            NavigationController.SetNavigationBarHidden(true, false);
             base.ViewDidLoad();
 
             UITableViewController friendsTableViewController = new UITableViewController();
-            var refreshControl = new MvxUIRefreshControl();
-            refreshControl.Message = "Refreshing items";
+            var refreshControl = new MvxUIRefreshControl {Message = "Refreshing items"};
             friendsTableViewController.RefreshControl = refreshControl;
-            UITableView tableView = new UITableView(View.Frame);
+            var statusBarHeight = UIApplication.SharedApplication.StatusBarFrame.Height;
+            UITableView tableView = new UITableView(new CGRect(0, statusBarHeight, View.Frame.Width, View.Frame.Height - statusBarHeight));
             friendsTableViewController.TableView = tableView;
             Add(tableView);
-            AutomaticallyAdjustsScrollViewInsets = false;
+            AutomaticallyAdjustsScrollViewInsets = true;
            
             var tableViewSource = new MvxStandardTableViewSource(tableView, "TitleText Title;ImageUrl Url");
             tableView.Source = tableViewSource;
@@ -91,23 +92,5 @@ namespace ImageTesterIOS
         }
 
         #endregion
-    }
-
-    public class ImageCell : MvxTableViewCell
-    {
-         
-    }
-
-    public class InverseBooleanValueConverter : IMvxValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return !(bool) value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

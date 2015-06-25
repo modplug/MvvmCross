@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -15,12 +14,7 @@ namespace Core.ViewModels
     {
         public MainViewModel()
         {
-               
-        }
-
-        public async Task Init()
-        {
-            Urls = new ObservableCollection<MovieImageItem>();
+            Urls = new ObservableCollection<MovieImageItem>();   
         }
 
         public ObservableCollection<MovieImageItem> Urls
@@ -33,26 +27,17 @@ namespace Core.ViewModels
             }
         }
 
-        private string _imageUrl;
+        public async Task Init()
+        {
+            await RefreshThumbnails();
+        }
+        
         private bool _isLoading;
         private ObservableCollection<MovieImageItem> _urls;
 
-        public ICommand DownloadImageAsyncCommand { get {  return new MvxAsyncCommand(DownloadImageUrlAsync);} }
+        public ICommand RefreshListCommand { get {  return new MvxCommand(async () => await RefreshThumbnails());} }
 
-        public string ImageUrl
-        {
-            get { return _imageUrl; }
-            set
-            {
-                _imageUrl = value;
-                Debug.WriteLine("Current url: " + value);
-                RaisePropertyChanged(() => ImageUrl);
-            }
-        }
-
-        public ICommand RefreshListCommand { get {  return new MvxCommand(async () => await RefreshList());} }
-
-        private async Task RefreshList()
+        private async Task RefreshThumbnails()
         {            
             IsLoading = true;
             Urls.Clear();
@@ -68,35 +53,22 @@ namespace Core.ViewModels
                     {
                         var value = await response.Content.ReadAsStringAsync();
                         var loginResponse = JsonConvert.DeserializeObject<FanartTV>(value);
-                        foreach (var background in loginResponse.moviebackground)
+                        foreach (var background in loginResponse.moviethumb)
                         {                            
                             Urls.Add(new MovieImageItem(background.url, loginResponse.name));
                         }
-                        foreach (var poster in loginResponse.movieposter)
+                        foreach (var poster in loginResponse.moviethumb)
                         {
                             Urls.Add(new MovieImageItem(poster.url, loginResponse.name));
                         }
 
-                        foreach (var banner in loginResponse.moviebanner)
+                        foreach (var banner in loginResponse.moviethumb)
                         {
                             Urls.Add(new MovieImageItem(banner.url, loginResponse.name));
                         }
                     }
                 }
             }
-            IsLoading = false;
-        }
-
-        private async Task DownloadImageUrlAsync()
-        {
-            IsLoading = true;
-            var baseAddress = new Uri("http://private-anon-980cce65a-fanarttv.apiary-proxy.com/");
-            using (var httpClient = new HttpClient {BaseAddress = baseAddress})
-            {
-                var response = await httpClient.GetAsync("v3/movies/10195?api_key=ed4b784f97227358b31ca4dd966a04f1");
-            }                        
-            var index = new Random().Next(0, Urls.Count - 1);
-//            ImageUrl = Urls[index];
             IsLoading = false;
         }
 
@@ -110,6 +82,8 @@ namespace Core.ViewModels
             }
         }
     }
+
+    // Classes auto generated from JSON api
 
     public class MovieImageItem
     {
